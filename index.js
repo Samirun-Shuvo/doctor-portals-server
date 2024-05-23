@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config(); // Load environment variables from .env file
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -37,6 +37,7 @@ function verifyJwt(req, res, next) {
     next();
   });
 }
+
 async function run() {
   try {
     await client.connect();
@@ -49,11 +50,30 @@ async function run() {
       .db(process.env.DB_NAME)
       .collection("bookings");
     const usersCollection = client.db(process.env.DB_NAME).collection("users");
+    const doctorsCollection = client
+      .db(process.env.DB_NAME)
+      .collection("doctors");
+
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requesterAccount = await usersCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "forbidden" });
+      }
+    };
+
 
     // services api
     app.get("/services", async (req, res) => {
       try {
-        const services = await servicesCollection.find({}).toArray();
+        const services = await servicesCollection
+          .find({})
+          .project({ name: 1 })
+          .toArray();
         res.json(services);
       } catch (error) {
         console.error("Failed to retrieve services:", error);
@@ -73,20 +93,12 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-    app.put("/user/admin/:email", verifyJwt, async (req, res) => {
+    app.put("/user/admin/:email", verifyJwt, verifyAdmin, async (req, res) => {
       const email = req.params.email;
-      const requester = req.decoded.email;
-      const requesterAccount = await usersCollection.findOne({
-        email: requester,
-      });
-      if (requesterAccount.role === "admin") {
-        const query = { email: email };
-        const updateDoc = { $set: { role: "admin" } };
-        const result = await usersCollection.updateOne(query, updateDoc);
-        res.send(result);
-      } else {
-        res.status(403).send({ message: "forbidden" });
-      }
+      const query = { email: email };
+      const updateDoc = { $set: { role: "admin" } };
+      const result = await usersCollection.updateOne(query, updateDoc);
+      res.send(result);
     });
 
     app.put("/user/:email", async (req, res) => {
@@ -99,7 +111,7 @@ async function run() {
       const token = jwt.sign(
         { email: email },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "5h" }
       );
       res.send({ result, token });
     });
@@ -136,6 +148,13 @@ async function run() {
       }
     });
 
+    app.get("/booking/:id", verifyJwt, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const booking = await bookingsCollection.findOne(query);
+      res.send(booking);
+    });
+
     app.post("/booking", async (req, res) => {
       const booking = req.body;
       const query = {
@@ -159,6 +178,24 @@ async function run() {
       });
     });
 
+    //doctors api
+    app.get("/doctor", verifyJwt, verifyAdmin, async (req, res) => {
+      const doctors = await doctorsCollection.find().toArray();
+      res.send(doctors);
+    });
+
+    app.post("/doctor", verifyJwt, verifyAdmin, async (req, res) => {
+      const doctor = req.body;
+      const result = await doctorsCollection.insertOne(doctor);
+      res.send(result);
+    });
+
+    app.delete("/doctor/:email", verifyJwt, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const result = await doctorsCollection.deleteOne(filter);
+      res.send(result);
+    });
     // Start the server after the database connection is established
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
