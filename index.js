@@ -66,7 +66,6 @@ async function run() {
       }
     };
 
-
     // services api
     app.get("/services", async (req, res) => {
       try {
@@ -196,7 +195,7 @@ async function run() {
       const result = await doctorsCollection.deleteOne(filter);
       res.send(result);
     });
-    // Start the server after the database connection is established
+    // Start the server after the database connection is established in port
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
     });
