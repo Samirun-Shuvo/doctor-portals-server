@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const Stripe = require("stripe");
 const jwt = require("jsonwebtoken");
 require("dotenv").config(); // Load environment variables from .env file
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -7,8 +8,15 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
+
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  next();
+});
 
 //token genarate from terminal
 //step 1: node
@@ -53,6 +61,9 @@ async function run() {
     const doctorsCollection = client
       .db(process.env.DB_NAME)
       .collection("doctors");
+    const paymentCollection = client
+      .db(process.env.DB_NAME)
+      .collection("payments");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -175,6 +186,43 @@ async function run() {
         message: "A booking added successfully",
         booking: result,
       });
+    });
+
+    app.patch("/booking/:id", verifyJwt, async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      const result = await paymentCollection.insertOne(payment);
+      const updatedooking = await bookingsCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+
+      res.send(updatedDoc);
+    });
+
+    //payment api
+    app.post("/create-payment-intent", verifyJwt, async (req, res) => {
+      try {
+        const { amount } = req.body;
+
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount,
+          currency: "usd",
+        });
+
+        res.status(200).send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
 
     //doctors api
