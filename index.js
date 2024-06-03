@@ -15,8 +15,10 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  res.setHeader('Access-Control-Allow-Origin', '*');
   next();
 });
+
 
 //token genarate from terminal
 //step 1: node
