@@ -14,7 +14,6 @@ app.use(express.json());
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', 'https://doctor-portals-client-9wznhmq2l-md-shuvo-miahs-projects.vercel.app');
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   next();
