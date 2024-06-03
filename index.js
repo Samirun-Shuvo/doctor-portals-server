@@ -12,11 +12,11 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 
-app.use((req, res, next) => {
-  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
-  next();
-});
+// app.use((req, res, next) => {
+//   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+//   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+//   next();
+// });
 
 //token genarate from terminal
 //step 1: node
