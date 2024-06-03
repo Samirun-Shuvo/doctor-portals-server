@@ -8,32 +8,15 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
-const allowedOrigins = [
-  'https://doctor-portals-client-9wznhmq2l-md-shuvo-miahs-projects.vercel.app',
-  'http://localhost:5173'
-];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-};
-
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-// app.use(cors());
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 
-// app.use((req, res, next) => {
-//   res.setHeader('Access-Control-Allow-Origin', 'https://doctor-portals-client-9wznhmq2l-md-shuvo-miahs-projects.vercel.app');
-//   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-//   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
-//   next();
-// });
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  next();
+});
 
 //token genarate from terminal
 //step 1: node
