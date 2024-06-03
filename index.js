@@ -13,15 +13,11 @@ app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   next();
 });
-app.use((req, res, next) => {
- 
-  next();
-});
-
 
 //token genarate from terminal
 //step 1: node
