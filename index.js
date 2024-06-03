@@ -9,7 +9,13 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://doctor-portals-client.vercel.app"],
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // app.use((req, res, next) => {
