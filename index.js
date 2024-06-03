@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 app.use(
   cors({
-    origin: ["https://doctor-portals-client.vercel.app"],
+    origin: ["http://localhost:5173", "https://doctor-portals-client.vercel.app"],
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
     credentials: true,
   })
@@ -249,6 +249,7 @@ async function run() {
       const result = await doctorsCollection.deleteOne(filter);
       res.send(result);
     });
+
     // Start the server after the database connection is established in port
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
